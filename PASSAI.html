@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoPassAI - Leave Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a0b3d, #2b1a5e);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            color: #e0e1dd;
+        }
+        .background-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .student-figure {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: url('https://img.icons8.com/ios-filled/50/ffffff/student-male.png') no-repeat center;
+            background-size: contain;
+            opacity: 0.15;
+            animation: drift 12s infinite ease-in-out;
+        }
+        @keyframes drift {
+            0% { transform: translateY(100vh) scale(0.7); opacity: 0.1; }
+            50% { opacity: 0.25; }
+            100% { transform: translateY(-100vh) scale(1.1); opacity: 0.1; }
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 450px;
+            margin: 20px auto;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            color: #00d4ff;
+            text-shadow: 0 0 12px #00d4ff, 0 0 20px #ff007f;
+            font-size: 2.3em;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #e0e1dd;
+            font-size: 1.6em;
+            margin: 20px 0;
+            text-shadow: 0 0 5px #00d4ff;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 12px #00d4ff;
+            background: rgba(255, 255, 255, 0.25);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #00d4ff, #ff007f);
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00d4ff, 0 0 30px #ff007f;
+        }
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+        button:active::after {
+            width: 250px;
+            height: 250px;
+        }
+        .approve-btn {
+            background: linear-gradient(45deg, #00ff85, #00d4ff);
+        }
+        .reject-btn {
+            background: linear-gradient(45deg, #ff4d4d, #ff007f);
+        }
+        .verify-btn {
+            background: linear-gradient(45deg, #ffeb3b, #00d4ff);
+        }
+        .error {
+            color: #ff4d4d;
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-shadow: 0 0 5px #ff4d4d;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        th, td {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            text-align: left;
+            color: #e0e1dd;
+        }
+        th {
+            background: rgba(0, 212, 255, 0.25);
+            font-weight: 600;
+        }
+        a {
+            color: #00d4ff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #ff007f;
+            text-decoration: underline;
+        }
+        #adminPanel {
+            display: none;
+            max-width: 900px;
+        }
+        canvas {
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .loader {
+            display: none;
+            border: 4px solid #00d4ff;
+            border-top: 4px solid #ff007f;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: #e0e1dd;
+            font-size: 1em;
+            text-shadow: 0 0 10px #00d4ff;
+            z-index: 2;
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00d4ff, 0 0 15px #ff007f; }
+            to { text-shadow: 0 0 15px #00d4ff, 0 0 20px #ff007f; }
+        }
+        @media (max-width: 600px) {
+            .container {
+                max-width: 90%;
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.9em;
+            }
+            button {
+                font-size: 1em;
+            }
+            .footer {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <script>
+            for (let i = 0; i < 25; i++) {
+                const div = document.createElement('div');
+                div.className = 'student-figure';
+                div.style.left = `${Math.random() * 100}%`;
+                div.style.animationDuration = `${10 + Math.random() * 5}s`;
+                div.style.animationDelay = `${Math.random() * 6}s`;
+                document.querySelector('.background-animation').appendChild(div);
+            }
+        </script>
+    </div>
+    <div id="loginPage" class="container">
+        <h1>AutoPassAI</h1>
+        <input type="text" id="regNumber" placeholder="Registered Number (e.g., 23KD1A4201)" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+        <div id="loginLoader" class="loader"></div>
+        <p id="loginError" class="error"></p>
+    </div>
+    <div id="userPage" class="container" style="display: none;">
+        <h1>Welcome, <span id="userName"></span></h1>
+        <button onclick="showRequestForm()">Request Leave</button>
+        <button onclick="logout()">Logout</button>
+        <h2>Your Leave Requests</h2>
+        <table id="requestsTable">
+            <thead>
+                <tr>
+                    <th>Reason</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Slip</th>
+                </tr>
+            </thead>
+            <tbody id="requestsBody"></tbody>
+        </table>
+    </div>
+    <div id="requestForm" class="container" style="display: none;">
+        <h1>Leave Request</h1>
+        <textarea id="reason" placeholder="Reason for Leave" required></textarea>
+        <input type="datetime-local" id="leaveTime" required>
+        <button onclick="submitRequest()">Submit Request</button>
+        <button onclick="backToDashboard()">Back</button>
+        <div id="requestLoader" class="loader"></div>
+    </div>
+    <div id="adminPanel" class="container" style="display: none;">
+        <h1>Admin Panel</h1>
+        <h2>Pending Requests</h2>
+        <table id="adminTable">
+            <thead>
+                <tr>
+                    <th>Reg Number</th>
+                    <th>Name</th>
+                    <th>Hosteler</th>
+                    <th>Reason</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Parent Verification</th>
+                </tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+        </table>
+        <button onclick="logout()">Logout</button>
+    </div>
+    <div id="verifyForm" class="container" style="display: none;">
+        <h1>Parent Verification</h1>
+        <p id="verifyStudent"></p>
+        <input type="text" id="otpInput" placeholder="Enter OTP" required>
+        <button onclick="verifyOTP()">Verify OTP</button>
+        <button onclick="backToAdmin()">Back</button>
+        <div id="verifyLoader" class="loader"></div>
+        <p id="verifyError" class="error"></p>
+    </div>
+    <div class="footer">Developed for Students by Students</div>
+
+    <script>
+        // User credentials with roll numbers, names, hosteler status, and parent phone numbers
+        const users = [
+            { regNumber: "23KD1A4201", name: "SUSMITHA", password: "23KD1A4201", role: "student", isHosteler: false, parentPhone: "+919876543201" },
+            { regNumber: "23KD1A4202", name: "NIKHIL", password: "23KD1A4202", role: "student", isHosteler: false, parentPhone: "+919876543202" },
+            { regNumber: "23KD1A4203", name: "YASHWANTH", password: "23KD1A4203", role: "student", isHosteler: false, parentPhone: "+919876543203" },
+            { regNumber: "23KD1A4204", name: "PARDHASARADHI", password: "23KD1A4204", role: "student", isHosteler: false, parentPhone: "+919876543204" },
+            { regNumber: "23KD1A4205", name: "SANJANA", password: "23KD1A4205", role: "student", isHosteler: true, parentPhone: "+919876543205" },
+            { regNumber: "23KD1A4206", name: "NAVYA", password: "23KD1A4206", role: "student", isHosteler: false, parentPhone: "+919876543206" },
+            { regNumber: "23KD1A4207", name: "NAGENDRA", password: "23KD1A4207", role: "student", isHosteler: false, parentPhone: "+919876543207" },
+            { regNumber: "23KD1A4208", name: "MOHANRAO", password: "23KD1A4208", role: "student", isHosteler: false, parentPhone: "+919876543208" },
+            { regNumber: "23KD1A4209", name: "SRIHARI", password: "23KD1A4209", role: "student", isHosteler: false, parentPhone: "+919876543209" },
+            { regNumber: "23KD1A4210", name: "PARDHIV", password: "23KD1A4210", role: "student", isHosteler: false, parentPhone: "+919876543210" },
+            { regNumber: "23KD1A4211", name: "VENKATASAI", password: "23KD1A4211", role: "student", isHosteler: false, parentPhone: "+919876543211" },
+            { regNumber: "23KD1A4212", name: "SOWJANYA", password: "23KD1A4212", role: "student", isHosteler: false, parentPhone: "+919876543212" },
+            { regNumber: "23KD1A4213", name: "ASHRITHA", password: "23KD1A4213", role: "student", isHosteler: false, parentPhone: "+919876543213" },
+            { regNumber: "23KD1A4214", name: "VENKATALAKSHMI", password: "23KD1A4214", role: "student", isHosteler: false, parentPhone: "+919876543214" },
+            { regNumber: "23KD1A4215", name: "PURNACHANDU", password: "23KD1A4215", role: "student", isHosteler: false, parentPhone: "+919876543215" },
+            { regNumber: "23KD1A4216", name: "ASWINI", password: "23KD1A4216", role: "student", isHosteler: false, parentPhone: "+919876543216" },
+            { regNumber: "23KD1A4217", name: "KUSHMITHA", password: "23KD1A4217", role: "student", isHosteler: true, parentPhone: "+919876543217" },
+            { regNumber: "23KD1A4218", name: "MANISHANKAR", password: "23KD1A4218", role: "student", isHosteler: false, parentPhone: "+919876543218" },
+            { regNumber: "23KD1A4219", name: "RAVITEJA", password: "23KD1A4219", role: "student", isHosteler: true, parentPhone: "+919876543219" },
+            { regNumber: "23KD1A4220", name: "MEGHANA KANDHI", password: "23KD1A4220", role: "student", isHosteler: false, parentPhone: "+919876543220" },
+            { regNumber: "23KD1A4221", name: "DEEPAK", password: "23KD1A4221", role: "student", isHosteler: false, parentPhone: "+919876543221" },
+            { regNumber: "23KD1A4222", name: "LALITH KUMAR", password: "23KD1A4222", role: "student", isHosteler: false, parentPhone: "+919876543222" },
+            { regNumber: "23KD1A4223", name: "GNANA DEEPIKA", password: "23KD1A4223", role: "student", isHosteler: false, parentPhone: "+919876543223" },
+            { regNumber: "23KD1A4224", name: "ANURADHA", password: "23KD1A4224", role: "student", isHosteler: false, parentPhone: "+919876543224" },
+            { regNumber: "23KD1A4225", name: "KRISHNA BHARATI", password: "23KD1A4225", role: "student", isHosteler: false, parentPhone: "+919876543225" },
+            { regNumber: "23KD1A4226", name: "RISHIVARMA", password: "23KD1A4226", role: "student", isHosteler: false, parentPhone: "+919876543226" },
+            { regNumber: "23KD1A4227", name: "SIVAPRIYA", password: "23KD1A4227", role: "student", isHosteler: false, parentPhone: "+919876543227" },
+            { regNumber: "23KD1A4228", name: "HEMASAGAR", password: "23KD1A4228", role: "student", isHosteler: false, parentPhone: "+919876543228" },
+            { regNumber: "23KD1A4229", name: "BHASKAR", password: "23KD1A4229", role: "student", isHosteler: false, parentPhone: "+919876543229" },
+            { regNumber: "23KD1A4230", name: "HARSHITA", password: "23KD1A4230", role: "student", isHosteler: false, parentPhone: "+919876543230" },
+            { regNumber: "23KD1A4231", name: "AJAYKUMAR", password: "23KD1A4231", role: "student", isHosteler: false, parentPhone: "+919876543231" },
+            { regNumber: "23KD1A4232", name: "SAITEJA", password: "23KD1A4232", role: "student", isHosteler: true, parentPhone: "+919876543232" },
+            { regNumber: "23KD1A4233", name: "SHRUTI", password: "23KD1A4233", role: "student", isHosteler: true, parentPhone: "+919876543233" },
+            { regNumber: "23KD1A4234", name: "HARISH", password: "23KD1A4234", role: "student", isHosteler: false, parentPhone: "+919876543234" },
+            { regNumber: "23KD1A4235", name: "SASANK", password: "23KD1A4235", role: "student", isHosteler: false, parentPhone: "+919876543235" },
+            { regNumber: "23KD1A4236", name: "TIRUMALA DEVI", password: "23KD1A4236", role: "student", isHosteler: false, parentPhone: "+919876543236" },
+            { regNumber: "23KD1A4237", name: "VIDYA SREE", password: "23KD1A4237", role: "student", isHosteler: false, parentPhone: "+919876543237" },
+            { regNumber: "23KD1A4238", name: "MOHAN MUDDADLA", password: "23KD1A4238", role: "student", isHosteler: false, parentPhone: "+919876543238" },
+            { regNumber: "23KD1A4239", name: "MANIMALA", password: "23KD1A4239", role: "student", isHosteler: false, parentPhone: "+919876543239" },
+            { regNumber: "23KD1A4240", name: "MOUNIKA OMMI", password: "23KD1A4240", role: "student", isHosteler: false, parentPhone: "+919876543240" },
+            { regNumber: "23KD1A4241", name: "JASWANTH", password: "23KD1A4241", role: "student", isHosteler: false, parentPhone: "+919876543241" },
+            { regNumber: "23KD1A4242", name: "MEGHANA PAPPALA", password: "23KD1A4242", role: "student", isHosteler: true, parentPhone: "+919876543242" },
+            { regNumber: "23KD1A4243", name: "MANOJKUMAR", password: "23KD1A4243", role: "student", isHosteler: false, parentPhone: "+919876543243" },
+            { regNumber: "23KD1A4244", name: "PRAGYNA SIRI", password: "23KD1A4244", role: "student", isHosteler: false, parentPhone: "+919876543244" },
+            { regNumber: "23KD1A4245", name: "SAMPATH VINAY", password: "23KD1A4245", role: "student", isHosteler: false, parentPhone: "+919876543245" },
+            { regNumber: "23KD1A4246", name: "VENKAT KALYAN", password: "23KD1A4246", role: "student", isHosteler: false, parentPhone: "+919876543246" },
+            { regNumber: "23KD1A4247", name: "MOUNIKA SRAVANI", password: "23KD1A4247", role: "student", isHosteler: false, parentPhone: "+919876543247" },
+            { regNumber: "23KD1A4248", name: "RAMYA", password: "23KD1A4248", role: "student", isHosteler: false, parentPhone: "+919876543248" },
+            { regNumber: "23KD1A4249", name: "LOKESWARI", password: "23KD1A4249", role: "student", isHosteler: true, parentPhone: "+919876543249" },
+            { regNumber: "23KD1A4250", name: "GUNASEKHAR", password: "23KD1A4250", role: "student", isHosteler: false, parentPhone: "+919876543250" },
+            { regNumber: "23KD1A4251", name: "SHAMSHEER", password: "23KD1A4251", role: "student", isHosteler: false, parentPhone: "+919876543251" },
+            { regNumber: "23KD1A4252", name: "VARMA", password: "23KD1A4252", role: "student", isHosteler: false, parentPhone: "+919876543252" },
+            { regNumber: "23KD1A4253", name: "SAHITH", password: "23KD1A4253", role: "student", isHosteler: false, parentPhone: "+919876543253" },
+            { regNumber: "23KD1A4254", name: "PAVAN KUMAR SOMMADULA", password: "23KD1A4254", role: "student", isHosteler: false, parentPhone: "+919876543254" },
+            { regNumber: "23KD1A4255", name: "MUSKAAN", password: "23KD1A4255", role: "student", isHosteler: false, parentPhone: "+919876543255" },
+            { regNumber: "23KD1A4256", name: "ARUNRAJ", password: "23KD1A4256", role: "student", isHosteler: false, parentPhone: "+919876543256" },
+            { regNumber: "23KD1A4257", name: "INDU", password: "23KD1A4257", role: "student", isHosteler: false, parentPhone: "+919876543257" },
+            { regNumber: "23KD1A4258", name: "NIKHILTANNA", password: "23KD1A4258", role: "student", isHosteler: true, parentPhone: "+919876543258" },
+            { regNumber: "23KD1A4259", name: "SATWIK", password: "23KD1A4259", role: "student", isHosteler: false, parentPhone: "+919876543259" },
+            { regNumber: "23KD1A4260", name: "DURGAPRASAD", password: "23KD1A4260", role: "student", isHosteler: false, parentPhone: "+919876543260" },
+            { regNumber: "23KD1A4261", name: "RAMU", password: "23KD1A4261", role: "student", isHosteler: false, parentPhone: "+919876543261" },
+            { regNumber: "23KD1A4262", name: "SAISURYA", password: "23KD1A4262", role: "student", isHosteler: false, parentPhone: "+919876543262" },
+            { regNumber: "23KD1A4263", name: "NIDHI", password: "23KD1A4263", role: "student", isHosteler: false, parentPhone: "+919876543263" },
+            { regNumber: "23KD1A4264", name: "PAVAN KUMAR YEJJALA", password: "23KD1A4264", role: "student", isHosteler: false, parentPhone: "+919876543264" },
+            { regNumber: "24KD5A4201", name: "SAIMURTHY", password: "24KD5A4201", role: "student", isHosteler: false, parentPhone: "+919876543265" },
+            { regNumber: "24KD5A4202", name: "LOKESH", password: "24KD5A4202", role: "student", isHosteler: false, parentPhone: "+919876543266" },
+            { regNumber: "24KD5A4203", name: "PADMAVATI", password: "24KD5A4203", role: "student", isHosteler: false, parentPhone: "+919876543267" },
+            { regNumber: "24KD5A4204", name: "NAGALAKSHMI", password: "24KD5A4204", role: "student", isHosteler: true, parentPhone: "+919876543268" },
+            { regNumber: "24KD5A4205", name: "TIRUMALA PRASAD", password: "24KD5A4205", role: "student", isHosteler: false, parentPhone: "+919876543269" },
+            { regNumber: "24KD5A4206", name: "SAMUEL RAJ", password: "24KD5A4206", role: "student", isHosteler: false, parentPhone: "+919876543270" },
+            { regNumber: "24KD5A4207", name: "ADITYA", password: "24KD5A4207", role: "student", isHosteler: false, parentPhone: "+919876543271" },
+            { regNumber: "24KD5A4208", name: "HIMADEEP", password: "24KD5A4208", role: "student", isHosteler: false, parentPhone: "+919876543272" },
+            { regNumber: "admin", name: "Admin User", password: "admin", role: "admin", isHosteler: false, parentPhone: null }
+        ];
+
+        let leaveRequests = [];
+        let currentUser = null;
+        let currentRequestId = null;
+        let generatedOTP = null;
+        const ws = new WebSocket('ws://localhost:8080');
+        const FAST2SMS_API_KEY = 'YOUR_FAST2SMS_API_KEY'; // Replace with your Fast2SMS API key
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'newRequest') {
+                if (currentUser && currentUser.role === 'admin') {
+                    updateAdminTable();
+                }
+            } else if (data.type === 'statusUpdate' && currentUser && currentUser.regNumber === data.regNumber) {
+                updateUserTable();
+            } else if (data.type === 'smsStatus') {
+                console.log('SMS Status:', data.message);
+            } else if (data.type === 'otpStatus') {
+                console.log('OTP Status:', data.message);
+            }
+        };
+
+        ws.onerror = () => {
+            console.log('WebSocket connection failed. Ensure server.js is running.');
+        };
+
+        function showLoader(id, show) {
+            document.getElementById(id).style.display = show ? 'block' : 'none';
+        }
+
+        async function login() {
+            showLoader('loginLoader', true);
+            const regNumber = document.getElementById('regNumber').value;
+            const password = document.getElementById('password').value;
+            const user = users.find(u => u.regNumber === regNumber && u.password === password);
+            setTimeout(() => {
+                showLoader('loginLoader', false);
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('loginPage').style.display = 'none';
+                    if (user.role === 'admin') {
+                        document.getElementById('adminPanel').style.display = 'block';
+                        updateAdminTable();
+                    } else {
+                        document.getElementById('userPage').style.display = 'block';
+                        document.getElementById('userName').textContent = user.name;
+                        updateUserTable();
+                    }
+                    document.getElementById('loginError').textContent = '';
+                } else {
+                    document.getElementById('loginError').textContent = 'Invalid credentials';
+                }
+            }, 1000);
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('userPage').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('requestForm').style.display = 'none';
+            document.getElementById('verifyForm').style.display = 'none';
+        }
+
+        function showRequestForm() {
+            document.getElementById('userPage').style.display = 'none';
+            document.getElementById('requestForm').style.display = 'block';
+        }
+
+        function backToDashboard() {
+            document.getElementById('requestForm').style.display = 'none';
+            document.getElementById('userPage').style.display = 'block';
+            updateUserTable();
+        }
+
+        function backToAdmin() {
+            document.getElementById('verifyForm').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            updateAdminTable();
+        }
+
+        async function submitRequest() {
+            showLoader('requestLoader', true);
+            const reason = document.getElementById('reason').value;
+            const leaveTime = document.getElementById('leaveTime').value;
+            if (reason && leaveTime) {
+                const request = {
+                    id: Date.now().toString(),
+                    regNumber: currentUser.regNumber,
+                    name: currentUser.name,
+                    reason,
+                    leaveTime,
+                    status: 'Pending',
+                    isHosteler: currentUser.isHosteler,
+                    parentVerified: false
+                };
+                leaveRequests.push(request);
+                ws.send(JSON.stringify({ type: 'newRequest', request }));
+                setTimeout(() => {
+                    showLoader('requestLoader', false);
+                    backToDashboard();
+                }, 1000);
+            } else {
+                showLoader('requestLoader', false);
+                alert('Please fill all fields');
+            }
+        }
+
+        async function sendOTP(requestId) {
+            showLoader('verifyLoader', true);
+            const request = leaveRequests.find(req => req.id === requestId);
+            if (request) {
+                const user = users.find(u => u.regNumber === request.regNumber);
+                if (user && user.isHosteler && user.parentPhone) {
+                    generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+                    const message = `Your OTP for leave request verification for ${request.name} (${request.regNumber}) is ${generatedOTP}.`;
+                    ws.send(JSON.stringify({
+                        type: 'sendOTP',
+                        to: user.parentPhone,
+                        message,
+                        apiKey: FAST2SMS_API_KEY
+                    }));
+                    currentRequestId = requestId;
+                    document.getElementById('verifyStudent').textContent = `Verifying for ${request.name} (${request.regNumber})`;
+                    document.getElementById('adminPanel').style.display = 'none';
+                    document.getElementById('verifyForm').style.display = 'block';
+                    setTimeout(() => {
+                        showLoader('verifyLoader', false);
+                    }, 1000);
+                }
+            }
+        }
+
+        async function verifyOTP() {
+            showLoader('verifyLoader', true);
+            const enteredOTP = document.getElementById('otpInput').value;
+            if (enteredOTP === generatedOTP) {
+                const request = leaveRequests.find(req => req.id === currentRequestId);
+                if (request) {
+                    request.parentVerified = true;
+                    ws.send(JSON.stringify({ type: 'statusUpdate', regNumber: request.regNumber }));
+                    document.getElementById('verifyError').textContent = 'Parent verified successfully';
+                    setTimeout(() => {
+                        showLoader('verifyLoader', false);
+                        backToAdmin();
+                    }, 1000);
+                }
+            } else {
+                document.getElementById('verifyError').textContent = 'Invalid OTP';
+                showLoader('verifyLoader', false);
+            }
+        }
+
+        async function approveRequest(id) {
+            const request = leaveRequests.find(req => req.id === id);
+            if (request) {
+                if (request.isHosteler && !request.parentVerified) {
+                    alert('Parent verification required for hosteler before approval.');
+                    return;
+                }
+                request.status = 'Approved';
+                ws.send(JSON.stringify({ type: 'statusUpdate', regNumber: request.regNumber }));
+                const message = `Leave request from ${request.name} (${request.regNumber}) for ${request.reason} at ${request.leaveTime} has been APPROVED.`;
+                ws.send(JSON.stringify({
+                    type: 'sendSMS',
+                    to: '+919392146433',
+                    message
+                }));
+                updateAdminTable();
+            }
+        }
+
+        async function rejectRequest(id) {
+            const request = leaveRequests.find(req => req.id === id);
+            if (request) {
+                request.status = 'Rejected';
+                ws.send(JSON.stringify({ type: 'statusUpdate', regNumber: request.regNumber }));
+                const message = `Leave request from ${request.name} (${request.regNumber}) for ${request.reason} at ${request.leaveTime} has been REJECTED.`;
+                ws.send(JSON.stringify({
+                    type: 'sendSMS',
+                    to: '+919392146433',
+                    message
+                }));
+                updateAdminTable();
+            }
+        }
+
+        function updateUserTable() {
+            const tbody = document.getElementById('requestsBody');
+            tbody.innerHTML = '';
+            leaveRequests.forEach(req => {
+                if (req.regNumber === currentUser.regNumber) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${req.reason}</td>
+                        <td>${req.leaveTime}</td>
+                        <td>${req.status}</td>
+                        <td>${req.status === 'Approved' ? `<a href="#" onclick="downloadSlip('${req.id}')">Download Slip</a>` : '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        function updateAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+            leaveRequests.forEach(req => {
+                if (req.status === 'Pending') {
+                    const user = users.find(u => u.regNumber === req.regNumber);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${req.regNumber}</td>
+                        <td>${req.name}</td>
+                        <td>${user.isHosteler ? 'Yes' : 'No'}</td>
+                        <td>${req.reason}</td>
+                        <td>${req.leaveTime}</td>
+                        <td>
+                            <button class="approve-btn" onclick="approveRequest('${req.id}')">Approve</button>
+                            <button class="reject-btn" onclick="rejectRequest('${req.id}')">Reject</button>
+                        </td>
+                        <td>
+                            ${user.isHosteler ? `<button class="verify-btn" onclick="sendOTP('${req.id}')">${req.parentVerified ? 'Verified' : 'Verify Parent'}</button>` : '-'}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        function downloadSlip(id) {
+            const request = leaveRequests.find(req => req.id === id);
+            if (request) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 450;
+                canvas.height = 250;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.strokeStyle = '#00d4ff';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+                
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 24px Poppins';
+                ctx.textAlign = 'center';
+                ctx.fillText('AutoPassAI Leave Slip', canvas.width / 2, 40);
+                
+                ctx.font = '18px Poppins';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Registered Number: ${request.regNumber}`, 20, 80);
+                ctx.fillText(`Name: ${request.name}`, 20, 110);
+                ctx.fillText(`Reason: ${request.reason}`, 20, 140);
+                ctx.fillText(`Timestamp: ${request.leaveTime}`, 20, 170);
+                ctx.fillText(`Hosteler: ${request.isHosteler ? 'Yes' : 'No'}`, 20, 200);
+                ctx.fillText(`Parent Verified: ${request.isHosteler ? (request.parentVerified ? 'Yes' : 'No') : 'N/A'}`, 20, 230);
+                
+                const link = document.createElement('a');
+                link.download = `leave_slip_${request.id}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>
